@@ -137,11 +137,17 @@ export default function PlacesListScreen({ navigation }: Props) {
       />
 
       <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+      <Pressable onPress={() => navigation.navigate('Home')}>
         <Ionicons name="home" size={34} color={colors.black} />
-        <Ionicons name="person" size={34} color="#46306F" />
-        <Ionicons name="search" size={34} color="#46306F" />
+      </Pressable>
+
+      <Ionicons name="person" size={34} color="#46306F" />
+      <Ionicons name="search" size={34} color="#46306F" />
+
+      <Pressable onPress={() => navigation.goBack()}>
         <Ionicons name="arrow-undo" size={34} color="#46306F" />
-      </View>
+      </Pressable>
+    </View>
     </View>
   );
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import HomeScreen from '../screens/HomeScreen';
 import PlacesListScreen from '../screens/PlacesListScreen';
 import PlaceDetailsScreen from '../screens/PlaceDetailsScreen';
 import { RootStackParamList } from '../types/navigation';
@@ -24,7 +25,7 @@ export default function AppNavigator() {
   return (
     <NavigationContainer theme={navigationTheme}>
       <Stack.Navigator
-        initialRouteName="PlacesList"
+        initialRouteName="Home"
         screenOptions={{
           headerShown: false,
           contentStyle: {
@@ -32,6 +33,7 @@ export default function AppNavigator() {
           },
         }}
       >
+        <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="PlacesList" component={PlacesListScreen} />
         <Stack.Screen name="PlaceDetails" component={PlaceDetailsScreen} />
       </Stack.Navigator>
