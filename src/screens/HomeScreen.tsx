@@ -35,7 +35,8 @@ const menuItems: MenuItem[] = [
     id: '2',
     title: 'Mais visitados',
     image: require('../../assets/icons/maisvisitados.png'),
-    enabled: false,
+    enabled: true,
+    route: 'MostVisitedList',
   },
   {
     id: '3',
@@ -53,7 +54,8 @@ const menuItems: MenuItem[] = [
     id: '5',
     title: 'Agências de Turismo',
     image: require('../../assets/icons/agenciasdeturismo.png'),
-    enabled: false,
+    enabled: true,
+    route: 'TourAgencies',
   },
   {
     id: '6',

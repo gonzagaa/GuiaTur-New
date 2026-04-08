@@ -4,4 +4,9 @@ export type RootStackParamList = {
   PlaceDetails: {
     placeId: string;
   };
+  MostVisitedList: undefined;
+  MostVisitedDetails: {
+    placeId: string;
+  };
+  TourAgencies: undefined;
 };
