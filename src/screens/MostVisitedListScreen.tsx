@@ -62,11 +62,7 @@ export default function MostVisitedListScreen({ navigation }: Props) {
           <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
             <Text style={styles.cityTitle}>Rio de Janeiro, RJ.</Text>
 
-            <Image
-              source={require('../../assets/most-visited/hero-rio.png')}
-              style={styles.heroImage}
-              resizeMode="contain"
-            />
+          
           </View>
         }
         ListEmptyComponent={
@@ -141,7 +137,7 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 24,
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 20,
   },
   cityTitle: {
     color: colors.primary,
@@ -176,12 +172,12 @@ const styles = StyleSheet.create({
   },
   placeDescription: {
     color: colors.textSecondary,
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 12,
+    lineHeight: 16,
   },
   visitButton: {
     backgroundColor: colors.primary,
-    minWidth: 132,
+    minWidth: 80,
     height: 56,
     borderRadius: 999,
     alignItems: 'center',
@@ -195,13 +191,13 @@ const styles = StyleSheet.create({
   },
   visitButtonText: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '500',
   },
   placeImage: {
     width: '100%',
     height: 190,
-    borderRadius: 28,
+    borderRadius: 10,
     borderWidth: 2,
     borderColor: '#111111',
     backgroundColor: '#2A2A2A',

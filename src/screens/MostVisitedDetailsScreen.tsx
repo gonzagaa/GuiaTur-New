@@ -103,12 +103,6 @@ export default function MostVisitedDetailsScreen({ route, navigation }: Props) {
       >
         <Text style={styles.cityTitle}>Rio de Janeiro, RJ.</Text>
 
-        <Image
-          source={require('../../assets/most-visited/hero-rio.png')}
-          style={styles.heroImage}
-          resizeMode="contain"
-        />
-
         <Text style={styles.placeTitle}>{place.title}</Text>
 
         <Image
@@ -221,15 +215,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   placeTitle: {
-    color: colors.primary,
+    color: '#ffffff',
     fontSize: 24,
     fontWeight: '800',
     marginBottom: 18,
+    textAlign: 'center',
   },
   mainImage: {
     width: '100%',
-    height: 290,
-    borderRadius: 28,
+    height: 150,
+    borderRadius: 10,
     borderWidth: 2,
     borderColor: '#6B6B6B',
     marginBottom: 26,
