@@ -1,4 +1,7 @@
 export type RootStackParamList = {
+  Login: undefined;
+  SignUp: undefined;
+  LocationSearch: undefined;
   Home: undefined;
   PlacesList: undefined;
   PlaceDetails: {
@@ -9,4 +12,8 @@ export type RootStackParamList = {
     placeId: string;
   };
   TourAgencies: undefined;
+  Hotels: undefined;
+  Exchange: undefined;
+  Profile: undefined;
+  LowSecurity: undefined;
 };

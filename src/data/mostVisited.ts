@@ -9,6 +9,7 @@ export type MostVisitedPlace = {
   detailText2: string;
   bullets: string[];
   imageKey: string;
+  imageUrl?: string;
   order: number;
   wazeUrl: string;
 };

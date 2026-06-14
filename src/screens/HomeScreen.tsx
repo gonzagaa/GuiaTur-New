@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Image,
   Pressable,
@@ -11,8 +11,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { doc, getDoc } from 'firebase/firestore';
 import { RootStackParamList } from '../types/navigation';
 import { colors } from '../theme/colors';
+import { useDestination } from '../contexts/DestinationContext';
+import { db } from '../services/firebase';
+
+const FALLBACK_DESCRIPTION =
+  'Explore os melhores destinos, dicas e agências locais para tornar a sua viagem inesquecível.';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -29,7 +35,8 @@ const menuItems: MenuItem[] = [
     id: '1',
     title: 'Hotéis',
     image: require('../../assets/icons/hoteis.png'),
-    enabled: false,
+    enabled: true,
+    route: 'Hotels',
   },
   {
     id: '2',
@@ -42,13 +49,15 @@ const menuItems: MenuItem[] = [
     id: '3',
     title: 'Baixa segurança',
     image: require('../../assets/icons/baixaseguranca.png'),
-    enabled: false,
+    enabled: true,
+    route: 'LowSecurity',
   },
   {
     id: '4',
     title: 'Intercâmbio',
     image: require('../../assets/icons/intercambio.png'),
-    enabled: false,
+    enabled: true,
+    route: 'Exchange',
   },
   {
     id: '5',
@@ -68,11 +77,51 @@ const menuItems: MenuItem[] = [
 
 export default function HomeScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
+  const { destination } = useDestination();
+  const [description, setDescription] = useState<string>(FALLBACK_DESCRIPTION);
+  const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchCity() {
+      if (!destination) {
+        setDescription(FALLBACK_DESCRIPTION);
+        setHeroImageUrl(null);
+        return;
+      }
+      try {
+        const snap = await getDoc(doc(db, 'cities', destination.cityId));
+        const data = snap.data() as
+          | { description?: string; imageUrl?: string }
+          | undefined;
+        if (cancelled) return;
+        setDescription(data?.description?.trim() || FALLBACK_DESCRIPTION);
+        setHeroImageUrl(data?.imageUrl?.trim() || null);
+      } catch (error) {
+        console.error('Erro ao buscar descrição da cidade:', error);
+        if (!cancelled) {
+          setDescription(FALLBACK_DESCRIPTION);
+          setHeroImageUrl(null);
+        }
+      }
+    }
+
+    fetchCity();
+    return () => {
+      cancelled = true;
+    };
+  }, [destination]);
 
   function handleMenuPress(item: MenuItem) {
+    console.log('Menu press:', item.title, item.enabled, item.route);
     if (!item.enabled || !item.route) return;
     navigation.navigate(item.route as never);
   }
+
+  const cityLabel = destination
+    ? `${destination.cityName}, ${destination.state}.`
+    : 'Selecione um destino';
 
   return (
     <View style={styles.container}>
@@ -85,18 +134,18 @@ export default function HomeScreen({ navigation }: Props) {
       >
 
         <Image
-          source={require('../../assets/images/riodejaneiro.jpg')}
+          source={
+            heroImageUrl
+              ? { uri: heroImageUrl }
+              : require('../../assets/images/riodejaneiro.jpg')
+          }
           style={styles.heroImage}
-          resizeMode="contain"
+          resizeMode="cover"
         />
 
-        <Text style={styles.cityTitle}>Rio de Janeiro, RJ.</Text>
+        <Text style={styles.cityTitle}>{cityLabel}</Text>
 
-        <Text style={styles.description}>
-          Situada em uma deslumbrante baía cercada por montanhas cobertas de
-          florestas tropicais, o Rio é um destino imperdível para quem busca
-          sol, praias paradisíacas, cultura, história e diversão.
-        </Text>
+        <Text style={styles.description}>{description}</Text>
 
 
         <View style={styles.divider} />
@@ -134,8 +183,12 @@ export default function HomeScreen({ navigation }: Props) {
 
       <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 8) }]}>
         <Ionicons name="home" size={34} color={colors.black} />
-        <Ionicons name="person" size={34} color="#46306F" />
-        <Ionicons name="search" size={34} color="#46306F" />
+        <Pressable onPress={() => navigation.navigate('Profile')}>
+          <Ionicons name="person" size={34} color="#46306F" />
+        </Pressable>
+        <Pressable onPress={() => navigation.navigate('LocationSearch')}>
+          <Ionicons name="search" size={34} color="#46306F" />
+        </Pressable>
         <Ionicons name="arrow-undo" size={34} color="#46306F" />
       </View>
     </View>

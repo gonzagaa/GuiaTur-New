@@ -11,27 +11,42 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { colors } from '../theme/colors';
 import { RootStackParamList } from '../types/navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { db } from '../services/firebase';
 import { Place } from '../data/places';
+import { useDestination } from '../contexts/DestinationContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PlacesList'>;
 
 export default function PlacesListScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
+  const { destination } = useDestination();
   const [search, setSearch] = useState('');
   const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
     async function fetchPlaces() {
+      setFetchError(false);
       try {
         const placesRef = collection(db, 'places');
-        const q = query(placesRef, orderBy('order', 'asc'));
-        const snapshot = await getDocs(q);
+
+        let snapshot;
+        if (destination) {
+          snapshot = await getDocs(
+            query(placesRef, where('cityId', '==', destination.cityId)),
+          );
+          // TODO: remover fallback quando todos os docs tiverem cityId
+          if (snapshot.empty) {
+            snapshot = await getDocs(placesRef);
+          }
+        } else {
+          snapshot = await getDocs(placesRef);
+        }
 
         const data: Place[] = snapshot.docs.map((doc) => {
           const place = doc.data() as Omit<Place, 'id'>;
@@ -41,16 +56,23 @@ export default function PlacesListScreen({ navigation }: Props) {
           };
         });
 
+        data.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
         setPlaces(data);
-      } catch (error) {
-        console.error('Erro ao buscar lugares:', error);
+      } catch (error: any) {
+        console.error('FETCH ERROR:', error?.code, error?.message);
+        setFetchError(true);
       } finally {
         setLoading(false);
       }
     }
 
     fetchPlaces();
-  }, []);
+  }, [destination]);
+
+  const cityLabel = destination
+    ? `${destination.cityName}, ${destination.state}.`
+    : 'Selecione um destino';
 
   const filteredPlaces = useMemo(() => {
     const value = search.trim().toLowerCase();
@@ -81,7 +103,7 @@ export default function PlacesListScreen({ navigation }: Props) {
             />
 
             <Text style={styles.smallTitle}>EXIBINDO DICAS DO LOCAL:</Text>
-            <Text style={styles.bigTitle}>Rio de Janeiro, RJ.</Text>
+            <Text style={styles.bigTitle}>{cityLabel}</Text>
 
             <View style={styles.searchContainer}>
               <TextInput
@@ -106,9 +128,17 @@ export default function PlacesListScreen({ navigation }: Props) {
               <ActivityIndicator size="large" color={colors.primary} />
               <Text style={styles.emptyStateText}>Carregando locais...</Text>
             </View>
+          ) : fetchError ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>
+                Não foi possível carregar os locais. Verifique sua conexão.
+              </Text>
+            </View>
           ) : (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>Nenhum local encontrado.</Text>
+              <Text style={styles.emptyStateText}>
+                Nenhum resultado para esta cidade ainda.
+              </Text>
             </View>
           )
         }
@@ -141,7 +171,9 @@ export default function PlacesListScreen({ navigation }: Props) {
         <Ionicons name="home" size={34} color={colors.black} />
       </Pressable>
 
-      <Ionicons name="person" size={34} color="#46306F" />
+      <Pressable onPress={() => navigation.navigate('Profile')}>
+        <Ionicons name="person" size={34} color="#46306F" />
+      </Pressable>
       <Ionicons name="search" size={34} color="#46306F" />
 
       <Pressable onPress={() => navigation.goBack()}>

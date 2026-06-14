@@ -10,27 +10,42 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { db } from '../services/firebase';
 import { MostVisitedPlace } from '../data/mostVisited';
 import { getMostVisitedImage } from '../data/mostVisitedImages';
 import { colors } from '../theme/colors';
 import { RootStackParamList } from '../types/navigation';
+import { useDestination } from '../contexts/DestinationContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MostVisitedList'>;
 
 export default function MostVisitedListScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
+  const { destination } = useDestination();
   const [places, setPlaces] = useState<MostVisitedPlace[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
     async function fetchMostVisited() {
+      setFetchError(false);
       try {
         const ref = collection(db, 'mostVisitedPlaces');
-        const q = query(ref, orderBy('order', 'asc'));
-        const snapshot = await getDocs(q);
+
+        let snapshot;
+        if (destination) {
+          snapshot = await getDocs(
+            query(ref, where('cityId', '==', destination.cityId)),
+          );
+          // TODO: remover fallback quando todos os docs tiverem cityId
+          if (snapshot.empty) {
+            snapshot = await getDocs(ref);
+          }
+        } else {
+          snapshot = await getDocs(ref);
+        }
 
         const data: MostVisitedPlace[] = snapshot.docs.map((doc) => {
           const place = doc.data() as Omit<MostVisitedPlace, 'id'>;
@@ -40,16 +55,23 @@ export default function MostVisitedListScreen({ navigation }: Props) {
           };
         });
 
+        data.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
         setPlaces(data);
-      } catch (error) {
-        console.error('Erro ao buscar mais visitados:', error);
+      } catch (error: any) {
+        console.error('FETCH ERROR:', error?.code, error?.message);
+        setFetchError(true);
       } finally {
         setLoading(false);
       }
     }
 
     fetchMostVisited();
-  }, []);
+  }, [destination]);
+
+  const cityLabel = destination
+    ? `${destination.cityName}, ${destination.state}.`
+    : 'Selecione um destino';
 
   return (
     <View style={styles.container}>
@@ -60,7 +82,7 @@ export default function MostVisitedListScreen({ navigation }: Props) {
         contentContainerStyle={{ paddingBottom: 110 }}
         ListHeaderComponent={
           <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-            <Text style={styles.cityTitle}>Rio de Janeiro, RJ.</Text>
+            <Text style={styles.cityTitle}>{cityLabel}</Text>
 
           
           </View>
@@ -71,9 +93,17 @@ export default function MostVisitedListScreen({ navigation }: Props) {
               <ActivityIndicator size="large" color={colors.primary} />
               <Text style={styles.emptyStateText}>Carregando locais...</Text>
             </View>
+          ) : fetchError ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>
+                Não foi possível carregar os locais. Verifique sua conexão.
+              </Text>
+            </View>
           ) : (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>Nenhum local encontrado.</Text>
+              <Text style={styles.emptyStateText}>
+                Nenhum resultado para esta cidade ainda.
+              </Text>
             </View>
           )
         }
@@ -104,7 +134,11 @@ export default function MostVisitedListScreen({ navigation }: Props) {
               }
             >
               <Image
-                source={getMostVisitedImage(item.imageKey)}
+                source={
+                  item.imageUrl
+                    ? { uri: item.imageUrl }
+                    : getMostVisitedImage(item.imageKey)
+                }
                 style={styles.placeImage}
                 resizeMode="cover"
               />
@@ -118,7 +152,9 @@ export default function MostVisitedListScreen({ navigation }: Props) {
           <Ionicons name="home" size={34} color={colors.black} />
         </Pressable>
 
-        <Ionicons name="person" size={34} color="#46306F" />
+        <Pressable onPress={() => navigation.navigate('Profile')}>
+          <Ionicons name="person" size={34} color="#46306F" />
+        </Pressable>
         <Ionicons name="search" size={34} color="#46306F" />
 
         <Pressable onPress={() => navigation.goBack()}>

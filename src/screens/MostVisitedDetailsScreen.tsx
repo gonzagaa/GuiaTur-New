@@ -106,7 +106,11 @@ export default function MostVisitedDetailsScreen({ route, navigation }: Props) {
         <Text style={styles.placeTitle}>{place.title}</Text>
 
         <Image
-          source={getMostVisitedImage(place.imageKey)}
+          source={
+            place.imageUrl
+              ? { uri: place.imageUrl }
+              : getMostVisitedImage(place.imageKey)
+          }
           style={styles.mainImage}
           resizeMode="cover"
         />
@@ -159,7 +163,9 @@ export default function MostVisitedDetailsScreen({ route, navigation }: Props) {
           <Ionicons name="home" size={34} color={colors.black} />
         </Pressable>
 
-        <Ionicons name="person" size={34} color="#46306F" />
+        <Pressable onPress={() => navigation.navigate('Profile')}>
+          <Ionicons name="person" size={34} color="#46306F" />
+        </Pressable>
         <Ionicons name="search" size={34} color="#46306F" />
 
         <Pressable onPress={() => navigation.goBack()}>
