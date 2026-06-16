@@ -34,18 +34,9 @@ export default function MostVisitedListScreen({ navigation }: Props) {
       try {
         const ref = collection(db, 'mostVisitedPlaces');
 
-        let snapshot;
-        if (destination) {
-          snapshot = await getDocs(
-            query(ref, where('cityId', '==', destination.cityId)),
-          );
-          // TODO: remover fallback quando todos os docs tiverem cityId
-          if (snapshot.empty) {
-            snapshot = await getDocs(ref);
-          }
-        } else {
-          snapshot = await getDocs(ref);
-        }
+        const snapshot = destination
+          ? await getDocs(query(ref, where('cityId', '==', destination.cityId)))
+          : await getDocs(ref);
 
         const data: MostVisitedPlace[] = snapshot.docs.map((doc) => {
           const place = doc.data() as Omit<MostVisitedPlace, 'id'>;
